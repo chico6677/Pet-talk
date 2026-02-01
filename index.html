@@ -31,7 +31,7 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // ★ここにあなたのAPIキーを貼り付けてください★
+        // APIキーを設定
         const API_KEY = "AIzaSyDcTkNTolRD2WzKnzPcgKFhv0dA5KE4NY4"; 
         const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -55,25 +55,21 @@
 
             const reader = new FileReader();
             reader.onloadend = async () => {
-                const base64Data = reader.result.split(',')[1];
-                const result = await model.generateContent([
-                    `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
-                    { inlineData: { data: base64Data, mimeType: file.type } }
-                ]);
-                output.innerText = try {
-    const result = await model.generateContent([
-        `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
-        { inlineData: { data: base64Data, mimeType: file.type } }
-    ]);
-    output.innerText = result.response.text();
-} catch (e) {
-    output.innerText = "エラー発生: " + e.message;
-}
-
+                try {
+                    const base64Data = reader.result.split(',')[1];
+                    const result = await model.generateContent([
+                        `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
+                        { inlineData: { data: base64Data, mimeType: file.type } }
+                    ]);
+                    output.innerText = result.response.text();
+                } catch (e) {
+                    // エラー内容を表示して原因を特定しやすくします
+                    output.innerText = "エラー発生: " + e.message;
+                }
             };
             reader.readAsDataURL(file);
         };
     </script>
-    
 </body>
 </html>
+
