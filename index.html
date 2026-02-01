@@ -29,10 +29,11 @@
     </div>
 
     <script type="module">
-        // 読み込み先を安定版に変更
+        // 安定版のライブラリを指定
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        const API_KEY = "AIzaSyDcTkNTolRD2WzKnzPcgKFhv0dA5KE4NY4"; 
+        // ★新しく作り直したAPIキーをここに貼り付け★
+        const API_KEY = "AIzaSyA-kcQfN-n7iZrVY8T01hppERgRyTN5aJ8"; 
         const genAI = new GoogleGenerativeAI(API_KEY);
 
         const imageInput = document.getElementById('imageInput');
@@ -53,7 +54,7 @@
             const personality = document.getElementById('personality').value;
             
             try {
-                // モデル名を標準に戻す
+                // モデル指定を一番標準的なものに変更
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
                 const reader = new FileReader();
@@ -61,12 +62,17 @@
                     try {
                         const base64Data = reader.result.split(',')[1];
                         const result = await model.generateContent([
-                            `この写真のペットになりきって、${personality}な性格で140文字以内で一言だけつぶやいて。`,
-                            { inlineData: { data: base64Data, mimeType: file.type } }
+                            {
+                                inlineData: {
+                                    data: base64Data,
+                                    mimeType: file.type
+                                }
+                            },
+                            { text: `この写真のペットになりきって、${personality}な性格で140文字以内で短く一言つぶやいて。` },
                         ]);
                         output.innerText = result.response.text();
                     } catch (e) {
-                        output.innerText = "通信エラー: " + e.message;
+                        output.innerText = "通信エラー: " + e.message + "\n※APIキーが有効になるまで数分かかる場合があります。";
                     }
                 };
                 reader.readAsDataURL(file);
