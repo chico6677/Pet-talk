@@ -29,9 +29,9 @@
     </div>
 
     <script type="module">
+        // 読み込み先を安定版に変更
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // APIキー
         const API_KEY = "AIzaSyDcTkNTolRD2WzKnzPcgKFhv0dA5KE4NY4"; 
         const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -53,20 +53,20 @@
             const personality = document.getElementById('personality').value;
             
             try {
-                // モデル名を最新版に指定
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+                // モデル名を標準に戻す
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
                 const reader = new FileReader();
                 reader.onloadend = async () => {
                     try {
                         const base64Data = reader.result.split(',')[1];
                         const result = await model.generateContent([
-                            `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
+                            `この写真のペットになりきって、${personality}な性格で140文字以内で一言だけつぶやいて。`,
                             { inlineData: { data: base64Data, mimeType: file.type } }
                         ]);
                         output.innerText = result.response.text();
                     } catch (e) {
-                        output.innerText = "エラー発生: " + e.message;
+                        output.innerText = "通信エラー: " + e.message;
                     }
                 };
                 reader.readAsDataURL(file);
