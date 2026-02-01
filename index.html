@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>うちの子のつぶやき AI</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #fff5f5; padding: 20px; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h1 { color: #ff6b6b; font-size: 1.5rem; }
+        #preview { width: 100%; border-radius: 10px; margin: 10px 0; display: none; }
+        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; }
+        button { background: #ff6b6b; color: white; border: none; cursor: pointer; }
+        #output { margin-top: 20px; padding: 15px; background: #fff0f0; border-radius: 10px; min-height: 50px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🐾 うちの子のつぶやき AI</h1>
+        <input type="file" id="imageInput" accept="image/*">
+        <img id="preview">
+        <select id="personality">
+            <option value="甘えん坊で、とにかく飼い主が大好き">💕 甘えん坊</option>
+            <option value="ツンデレで、素直になれない">😒 ツンデレ</option>
+            <option value="自分が一番偉いと思っている王様">👑 王様</option>
+        </select>
+        <button id="generateBtn">AIにつぶやいてもらう</button>
+        <div id="output">画像をアップしてね！</div>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // ★ここにあなたのAPIキーを貼り付けてください★
+        const API_KEY = AIzaSyDcTkNTolRD2WzKnzPcgKFhv0dA5KE4NY4; 
+        const genAI = new GoogleGenerativeAI(API_KEY);
+
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const output = document.getElementById('output');
+        const generateBtn = document.getElementById('generateBtn');
+
+        imageInput.onchange = evt => {
+            const [file] = imageInput.files;
+            if (file) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
+        }
+
+        generateBtn.onclick = async () => {
+            const file = imageInput.files[0];
+            if (!file) return alert("画像を選んでね");
+            
+            output.innerText = "考え中...";
+            const personality = document.getElementById('personality').value;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                const result = await model.generateContent([
+                    `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
+                    { inlineData: { data: base64Data, mimeType: file.type } }
+                ]);
+                output.innerText = result.response.text();
+            };
+            reader.readAsDataURL(file);
+        };
+    </script>
+</body>
+</html>
