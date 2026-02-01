@@ -60,10 +60,20 @@
                     `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
                     { inlineData: { data: base64Data, mimeType: file.type } }
                 ]);
-                output.innerText = result.response.text();
+                output.innerText = try {
+    const result = await model.generateContent([
+        `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
+        { inlineData: { data: base64Data, mimeType: file.type } }
+    ]);
+    output.innerText = result.response.text();
+} catch (e) {
+    output.innerText = "エラー発生: " + e.message;
+}
+
             };
             reader.readAsDataURL(file);
         };
     </script>
+    
 </body>
 </html>
