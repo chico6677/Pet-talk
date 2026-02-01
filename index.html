@@ -31,7 +31,7 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // APIキーを設定
+        // APIキー
         const API_KEY = "AIzaSyDcTkNTolRD2WzKnzPcgKFhv0dA5KE4NY4"; 
         const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -51,27 +51,29 @@
             
             output.innerText = "考え中...";
             const personality = document.getElementById('personality').value;
-            // 修正後
-　　　　　　　　const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+            
+            try {
+                // モデル名を最新版に指定
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
-
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                try {
-                    const base64Data = reader.result.split(',')[1];
-                    const result = await model.generateContent([
-                        `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
-                        { inlineData: { data: base64Data, mimeType: file.type } }
-                    ]);
-                    output.innerText = result.response.text();
-                } catch (e) {
-                    // エラー内容を表示して原因を特定しやすくします
-                    output.innerText = "エラー発生: " + e.message;
-                }
-            };
-            reader.readAsDataURL(file);
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    try {
+                        const base64Data = reader.result.split(',')[1];
+                        const result = await model.generateContent([
+                            `この写真のペットになりきって、${personality}な性格で140文字以内でつぶやいて。`,
+                            { inlineData: { data: base64Data, mimeType: file.type } }
+                        ]);
+                        output.innerText = result.response.text();
+                    } catch (e) {
+                        output.innerText = "エラー発生: " + e.message;
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (err) {
+                output.innerText = "初期化エラー: " + err.message;
+            }
         };
     </script>
 </body>
 </html>
-
