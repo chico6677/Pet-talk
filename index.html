@@ -5,33 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>うちの子のつぶやき AI</title>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; text-align: center; background: #fff5f5; padding: 20px; color: #333; }
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        h1 { color: #ff6b6b; font-size: 1.5rem; margin-bottom: 20px; }
-        #preview { width: 100%; border-radius: 10px; margin: 10px 0; display: none; object-fit: cover; max-height: 300px; }
-        input[type="file"] { margin: 10px 0; font-size: 0.9rem; }
-        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; font-size: 1rem; }
-        button { background: #ff6b6b; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.3s; }
-        button:hover { background: #ff5252; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #output { margin-top: 20px; padding: 15px; background: #fff0f0; border-radius: 10px; min-height: 60px; white-space: pre-wrap; line-height: 1.6; border: 1px dashed #ffb3b3; }
+        body { font-family: sans-serif; text-align: center; background: #fff5f5; padding: 20px; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h1 { color: #ff6b6b; font-size: 1.5rem; }
+        #preview { width: 100%; border-radius: 10px; margin: 10px 0; display: none; }
+        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; }
+        button { background: #ff6b6b; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #ccc; }
+        #output { margin-top: 20px; padding: 15px; background: #fff0f0; border-radius: 10px; min-height: 50px; white-space: pre-wrap; border: 1px dashed #ffb3b3; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>🐾 うちの子のつぶやき AI</h1>
-        <p style="font-size: 0.8rem; color: #888;">ペットの写真をアップしてね</p>
-        
         <input type="file" id="imageInput" accept="image/*">
         <img id="preview">
-        
         <select id="personality">
             <option value="甘えん坊で、とにかく飼い主が大好き">💕 甘えん坊</option>
             <option value="ツンデレで、素直になれない">😒 ツンデレ</option>
             <option value="自分が一番偉いと思っている王様">👑 王様</option>
-            <option value="食いしん坊で、常にご飯のことを考えている">🍖 食いしん坊</option>
         </select>
-        
         <button id="generateBtn">AIにつぶやいてもらう</button>
         <div id="output">画像をアップしてね！</div>
     </div>
@@ -39,7 +32,7 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // APIキー（※公開する際はGoogle Cloudコンソールで制限をかけることを推奨します）
+        // APIキー
         const API_KEY = "AIzaSyBoe8VT17q6hSwwEGbuIOLg38NQCb-QjB0"; 
         const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -48,34 +41,29 @@
         const output = document.getElementById('output');
         const generateBtn = document.getElementById('generateBtn');
 
-        // 画像プレビュー表示
         imageInput.onchange = evt => {
             const [file] = imageInput.files;
-            if (file) { 
-                preview.src = URL.createObjectURL(file); 
-                preview.style.display = 'block'; 
-                output.innerText = "「AIにつぶやいてもらう」を押してね！";
-            }
+            if (file) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
         }
 
         generateBtn.onclick = async () => {
             const file = imageInput.files[0];
-            if (!file) return alert("画像を選んでください！");
+            if (!file) return alert("画像を選んでね");
             
             generateBtn.disabled = true;
-            output.innerText = "考え中... 🐾";
+            output.innerText = "考え中...";
             const personality = document.getElementById('personality').value;
             
             try {
-                // モデル名を完全なパスに変更して互換性を確保
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                // 修正ポイント：モデル名を「gemini-1.5-flash-latest」に変更
+                // これにより、最新の安定したエンドポイントが呼ばれるようになります。
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
                 const reader = new FileReader();
                 reader.onloadend = async () => {
                     try {
                         const base64Data = reader.result.split(',')[1];
                         
-                        // プロンプトの組み立て
                         const result = await model.generateContent([
                             {
                                 inlineData: {
@@ -83,14 +71,13 @@
                                     mimeType: file.type
                                 }
                             },
-                            { text: `あなたは写真に写っているペットです。性格は「${personality}」です。その性格になりきって、飼い主に向けて140文字以内で一言つぶやいてください。絵文字も使って可愛らしく表現して。` },
+                            { text: `この写真のペットになりきって、${personality}な性格で140文字以内で一言つぶやいて。` },
                         ]);
                         
                         const response = await result.response;
                         output.innerText = response.text();
                     } catch (e) {
-                        console.error(e);
-                        output.innerText = "エラーが発生しました: " + e.message;
+                        output.innerText = "通信エラー: " + e.message;
                     } finally {
                         generateBtn.disabled = false;
                     }
