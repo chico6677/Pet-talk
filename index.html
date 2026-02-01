@@ -11,8 +11,8 @@
         #preview { width: 100%; border-radius: 10px; margin: 10px 0; display: none; }
         select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; }
         button { background: #ff6b6b; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #ccc; }
-        #output { margin-top: 20px; padding: 15px; background: #fff0f0; border-radius: 10px; min-height: 50px; white-space: pre-wrap; border: 1px dashed #ffb3b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #output { margin-top: 20px; padding: 15px; background: #fff0f0; border-radius: 10px; min-height: 50px; white-space: pre-wrap; border: 1px dashed #ffb3b3; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -30,6 +30,7 @@
     </div>
 
     <script type="module">
+        // ライブラリの読み込み
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
         // APIキー
@@ -43,27 +44,31 @@
 
         imageInput.onchange = evt => {
             const [file] = imageInput.files;
-            if (file) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                output.innerText = "準備OK！ボタンを押してね。";
+            }
         }
 
         generateBtn.onclick = async () => {
             const file = imageInput.files[0];
-            if (!file) return alert("画像を選んでね");
+            if (!file) return alert("画像を選んでね！");
             
             generateBtn.disabled = true;
-            output.innerText = "考え中...";
+            output.innerText = "考え中... 🐾";
             const personality = document.getElementById('personality').value;
             
             try {
-                // 修正ポイント：モデル名を「gemini-1.5-flash-latest」に変更
-                // これにより、最新の安定したエンドポイントが呼ばれるようになります。
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+                // 【超重要】モデル名をフルパス「models/gemini-1.5-flash」で指定
+                const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" });
 
                 const reader = new FileReader();
                 reader.onloadend = async () => {
                     try {
                         const base64Data = reader.result.split(',')[1];
                         
+                        // 画像とテキストの配列を渡す
                         const result = await model.generateContent([
                             {
                                 inlineData: {
@@ -71,13 +76,15 @@
                                     mimeType: file.type
                                 }
                             },
-                            { text: `この写真のペットになりきって、${personality}な性格で140文字以内で一言つぶやいて。` },
+                            { text: `この写真のペットになりきって、${personality}な性格で140文字以内で短く一言つぶやいて。` }
                         ]);
                         
                         const response = await result.response;
-                        output.innerText = response.text();
+                        const text = response.text();
+                        output.innerText = text;
                     } catch (e) {
-                        output.innerText = "通信エラー: " + e.message;
+                        console.error(e);
+                        output.innerText = "生成エラー: " + e.message;
                     } finally {
                         generateBtn.disabled = false;
                     }
